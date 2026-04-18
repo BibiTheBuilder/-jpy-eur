@@ -1,1 +1,366 @@
+<!DOCTYPE html>
 
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffd6e8">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
+<title>JPY ⇄ EUR</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+overscroll-behavior: none;
+user-select: none;
+-webkit-user-select: none;
+}
+
+body {
+font-family: ‘M PLUS Rounded 1c’, sans-serif;
+background: linear-gradient(160deg, #ffd6e8 0%, #e8d6ff 25%, #d6e8ff 50%, #d6ffe8 75%, #fff4d6 100%);
+min-height: 100vh;
+padding: 16px 14px 20px;
+color: #5a3a6f;
+}
+
+.app { max-width: 440px; margin: 0 auto; }
+
+.display {
+background: #fff9f0;
+border-radius: 20px;
+padding: 14px 18px;
+margin-bottom: 8px;
+border: 3px solid #fff;
+box-shadow: 0 3px 0 rgba(255, 182, 193, 0.4), 0 6px 16px rgba(200, 150, 180, 0.12);
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 10px;
+}
+
+.display.active {
+box-shadow: 0 3px 0 rgba(184, 138, 199, 0.6), 0 0 0 3px #b88ac7, 0 6px 16px rgba(200, 150, 180, 0.2);
+}
+
+.tag {
+background: #ffb3d1;
+color: white;
+padding: 4px 10px;
+border-radius: 10px;
+font-size: 11px;
+letter-spacing: 2px;
+font-weight: 800;
+flex-shrink: 0;
+}
+
+.tag.green { background: #9fc9a8; }
+
+.value {
+font-size: 32px;
+font-weight: 900;
+color: #5a3a6f;
+text-align: right;
+line-height: 1.1;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+flex: 1;
+min-width: 0;
+}
+
+.value .symbol {
+color: #b88ac7;
+font-weight: 700;
+margin-right: 3px;
+}
+
+.swap-row {
+display: flex;
+justify-content: center;
+margin: -2px 0;
+position: relative;
+z-index: 2;
+}
+
+.swap-btn {
+background: linear-gradient(135deg, #ffb3d1, #b88ac7);
+border: 3px solid #fff;
+border-radius: 50%;
+width: 40px;
+height: 40px;
+cursor: pointer;
+font-size: 18px;
+color: white;
+font-weight: 900;
+display: flex;
+align-items: center;
+justify-content: center;
+box-shadow: 0 3px 0 rgba(184, 138, 199, 0.5), 0 5px 12px rgba(200, 150, 180, 0.2);
+font-family: inherit;
+transition: transform 0.3s;
+}
+
+.swap-btn:active { transform: rotate(180deg) scale(0.9); }
+
+.keypad {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 8px;
+margin-top: 10px;
+}
+
+.key {
+background: #fff9f0;
+border: 3px solid #fff;
+border-radius: 14px;
+padding: 14px 0;
+font-size: 22px;
+font-weight: 800;
+color: #5a3a6f;
+font-family: inherit;
+cursor: pointer;
+box-shadow: 0 3px 0 rgba(255, 182, 193, 0.4), 0 5px 12px rgba(200, 150, 180, 0.1);
+transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.key:active {
+transform: translateY(2px);
+box-shadow: 0 1px 0 rgba(255, 182, 193, 0.4), 0 2px 6px rgba(200, 150, 180, 0.1);
+}
+
+.key.action { font-size: 18px; color: white; }
+
+.key.add-zeros {
+background: linear-gradient(135deg, #d6e8ff, #b3d1ff);
+color: #5a7a9f;
+font-size: 18px;
+}
+
+.key.clear {
+background: linear-gradient(135deg, #ffb3d1, #ff9ac0);
+box-shadow: 0 3px 0 rgba(255, 138, 184, 0.6), 0 5px 12px rgba(255, 138, 184, 0.2);
+}
+
+.key.back {
+background: linear-gradient(135deg, #ffe0a0, #ffcc80);
+box-shadow: 0 3px 0 rgba(230, 184, 120, 0.6), 0 5px 12px rgba(230, 184, 120, 0.2);
+color: white;
+}
+
+.key.n1 { background: linear-gradient(135deg, #fff9f0, #ffe8e8); }
+.key.n2 { background: linear-gradient(135deg, #fff9f0, #ffe8d6); }
+.key.n3 { background: linear-gradient(135deg, #fff9f0, #fff4d6); }
+.key.n4 { background: linear-gradient(135deg, #fff9f0, #e8ffd6); }
+.key.n5 { background: linear-gradient(135deg, #fff9f0, #d6ffe8); }
+.key.n6 { background: linear-gradient(135deg, #fff9f0, #d6f4ff); }
+.key.n7 { background: linear-gradient(135deg, #fff9f0, #d6e0ff); }
+.key.n8 { background: linear-gradient(135deg, #fff9f0, #e0d6ff); }
+.key.n9 { background: linear-gradient(135deg, #fff9f0, #f4d6ff); }
+.key.n0 { background: linear-gradient(135deg, #fff9f0, #ffd6ec); }
+.key.dot { background: linear-gradient(135deg, #fff9f0, #f0e6ff); }
+
+.phrases {
+margin-top: 14px;
+display: flex;
+flex-direction: column;
+gap: 6px;
+}
+
+.phrase {
+background: rgba(255, 255, 255, 0.7);
+border: 2px solid #fff;
+border-radius: 14px;
+padding: 10px 14px;
+backdrop-filter: blur(8px);
+}
+
+.phrase-jp {
+font-size: 25px;
+font-weight: 800;
+color: #5a3a6f;
+line-height: 1.2;
+}
+
+.phrase-en {
+font-size: 14px;
+color: #b88ac7;
+font-weight: 700;
+letter-spacing: 1px;
+text-transform: uppercase;
+margin-top: 4px;
+}
+</style>
+
+</head>
+<body>
+<div class="app">
+
+  <div class="display active" id="jpy-display">
+    <span class="tag">JPY</span>
+    <div class="value"><span class="symbol">¥</span><span id="jpy-val">10,000</span></div>
+  </div>
+
+  <div class="swap-row">
+    <button class="swap-btn" id="swap" aria-label="swap">⇅</button>
+  </div>
+
+  <div class="display" id="eur-display">
+    <span class="tag green">EUR</span>
+    <div class="value"><span class="symbol">€</span><span id="eur-val">53.59</span></div>
+  </div>
+
+  <div class="keypad">
+    <button class="key n7" data-k="7">7</button>
+    <button class="key n8" data-k="8">8</button>
+    <button class="key n9" data-k="9">9</button>
+    <button class="key back action" data-k="back">⌫</button>
+
+```
+<button class="key n4" data-k="4">4</button>
+<button class="key n5" data-k="5">5</button>
+<button class="key n6" data-k="6">6</button>
+<button class="key add-zeros" data-k="000">000</button>
+
+<button class="key n1" data-k="1">1</button>
+<button class="key n2" data-k="2">2</button>
+<button class="key n3" data-k="3">3</button>
+<button class="key add-zeros" data-k="00">00</button>
+
+<button class="key dot" data-k=".">.</button>
+<button class="key n0" data-k="0">0</button>
+<button class="key clear action" data-k="clear">AC</button>
+<button class="key add-zeros" data-k="0000">0000</button>
+```
+
+  </div>
+
+  <div class="phrases">
+    <div class="phrase">
+      <div class="phrase-jp">Sumimasen</div>
+      <div class="phrase-en">excuse me / sorry</div>
+    </div>
+    <div class="phrase">
+      <div class="phrase-jp">Kore wa ikura desu ka?</div>
+      <div class="phrase-en">how much is this?</div>
+    </div>
+    <div class="phrase">
+      <div class="phrase-jp">Arigatou gozaimasu</div>
+      <div class="phrase-en">thank you</div>
+    </div>
+    <div class="phrase">
+      <div class="phrase-jp">Kore o kudasai</div>
+      <div class="phrase-en">this one please</div>
+    </div>
+    <div class="phrase">
+      <div class="phrase-jp">Kaado de</div>
+      <div class="phrase-en">by card</div>
+    </div>
+    <div class="phrase">
+      <div class="phrase-jp">Fukuro wa iranai desu</div>
+      <div class="phrase-en">no bag needed</div>
+    </div>
+    <div class="phrase">
+      <div class="phrase-jp">Eigo wa hanasemasu ka?</div>
+      <div class="phrase-en">do you speak english?</div>
+    </div>
+    <div class="phrase">
+      <div class="phrase-jp">Iie, kekkou desu</div>
+      <div class="phrase-en">no, thank you</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const RATE = 0.005359;
+  const jpyDisplay = document.getElementById('jpy-display');
+  const eurDisplay = document.getElementById('eur-display');
+  const jpyVal = document.getElementById('jpy-val');
+  const eurVal = document.getElementById('eur-val');
+
+  let active = 'jpy';
+  let jpyStr = '10000';
+  let eurStr = '53.59';
+
+  function formatNumber(str) {
+    if (str === '' || str === '.') return str || '0';
+    const hasDecimal = str.includes('.');
+    const parts = str.split('.');
+    const intPart = parseInt(parts[0] || '0', 10).toLocaleString('en-US');
+    if (hasDecimal) return intPart + '.' + (parts[1] || '');
+    return intPart;
+  }
+
+  function render() {
+    jpyVal.textContent = formatNumber(jpyStr);
+    eurVal.textContent = formatNumber(eurStr);
+    jpyDisplay.classList.toggle('active', active === 'jpy');
+    eurDisplay.classList.toggle('active', active === 'eur');
+  }
+
+  function recalc() {
+    if (active === 'jpy') {
+      const n = parseFloat(jpyStr);
+      eurStr = isNaN(n) ? '0' : (n * RATE).toFixed(2);
+    } else {
+      const n = parseFloat(eurStr);
+      jpyStr = isNaN(n) ? '0' : Math.round(n / RATE).toString();
+    }
+  }
+
+  function press(k) {
+    let str = active === 'jpy' ? jpyStr : eurStr;
+
+    if (k === 'clear') {
+      str = '0';
+    } else if (k === 'back') {
+      str = str.length > 1 ? str.slice(0, -1) : '0';
+    } else if (k === '.') {
+      if (!str.includes('.')) str = str + '.';
+    } else {
+      if (str === '0') {
+        str = (k === '00' || k === '000' || k === '0000') ? '0' : k;
+      } else {
+        if (str.length < 15) str = str + k;
+      }
+    }
+
+    if (active === 'jpy') jpyStr = str; else eurStr = str;
+    recalc();
+    render();
+  }
+
+  document.querySelectorAll('.key').forEach(btn => {
+    btn.addEventListener('click', () => press(btn.dataset.k));
+  });
+
+  jpyDisplay.addEventListener('click', () => {
+    if (active !== 'jpy') { active = 'jpy'; render(); }
+  });
+  eurDisplay.addEventListener('click', () => {
+    if (active !== 'eur') { active = 'eur'; render(); }
+  });
+
+  document.getElementById('swap').addEventListener('click', () => {
+    active = active === 'jpy' ? 'eur' : 'jpy';
+    render();
+  });
+
+  render();
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+</script>
+
+</body>
+</html>
